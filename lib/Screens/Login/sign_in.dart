@@ -1,4 +1,6 @@
+import 'package:firebase/Screens/HomeScreens/home.dart';
 import 'package:firebase/Screens/Login/sign_up.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class SignIn extends StatefulWidget {
@@ -12,9 +14,28 @@ class _SignInState extends State<SignIn> {
   TextEditingController emailcontroller = TextEditingController();
 
   TextEditingController passwordcontroller = TextEditingController();
+  singin() async {
+    try {
+      UserCredential userCredential = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(
+              email: emailcontroller.text, password: passwordcontroller.text);
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => HomeScreen()));
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found') {
+        return showdialog(context, "Incorrect Email or Password",
+            "Write your email and password correctly");
+      } else if (e.code == 'wrong-password') {
+        return showdialog(
+            context, "Wrong Password", "Write your password correctly");
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: Text("Sign In"),
       ),
@@ -47,10 +68,7 @@ class _SignInState extends State<SignIn> {
             children: [
               ElevatedButton(
                   onPressed: () {
-                    setState(() {
-                      Navigator.push(context,
-                          MaterialPageRoute(builder: (context) => SignUp()));
-                    });
+                    singin();
                   },
                   child: Text("Sign In")),
               ElevatedButton(
@@ -121,4 +139,21 @@ class _SignInState extends State<SignIn> {
       ),
     );
   }
+
+  void showdialog(BuildContext context, String text1, String text2) =>
+      showDialog(
+        context: context,
+        builder: (BuildContext context) => AlertDialog(
+          title: Text(text1),
+          content: Text(text2),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text("Back"),
+            ),
+          ],
+        ),
+      );
 }
